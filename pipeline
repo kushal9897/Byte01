@@ -1,0 +1,59 @@
+pipeline {
+    agent any
+    
+//     tools {
+//     maven 'maven3'
+// }
+
+
+    environment {
+        DOCKER_HUB_USERNAME = 'kushal9897'  // Your Docker Hub username
+        IMAGE_NAME = 'task'              // Replace with your image name
+        DOCKER_CREDENTIALS_ID = 'docker'   // Updated Docker Hub credentials ID
+        GIT_CREDENTIALS_ID = 'git'         // Updated Git credentials ID
+        REPO_URL = 'https://github.com/kushal9897/Byte01.git' // Replace with your Git repo
+    }
+
+    stages {
+        stage('Clone Repository') {
+            steps {
+                git credentialsId: "git", url: "https://github.com/kushal9897/Byte01.git", branch: 'main'
+            }
+        }
+
+        // stage('Build with maven') {
+        //     steps {
+        //         sh 'mvn clean compile'  // Runs Maven compile step
+        //     }
+        // }
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    def imageTag = "kushal9897/task:latest"
+                    sh "docker build -t kushal9897/task:latest ."
+                }
+            }
+        }
+
+        stage('Push to Docker Hub') {
+            steps {
+                withDockerRegistry([credentialsId: "docker", url: '']) {
+                    script {
+                        def imageTag = "kushal9897/task:latest"
+                        sh "docker push kushal9897/task:latest"
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Pipeline executed successfully!'
+        }
+        failure {
+            echo 'Pipeline failed!'
+        }
+    }
+}
